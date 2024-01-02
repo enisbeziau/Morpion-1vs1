@@ -1,3 +1,8 @@
+"""
+Auteur : Enis Béziau
+Jeu du morpion en 1 contre 1 fait avec tkinter
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 
