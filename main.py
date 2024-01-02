@@ -1,86 +1,99 @@
-"""
-Auteur : Enis Béziau
-Jeu du morpion en 1 vs 1 fait avec Tkinter
-"""
-
-
-import tkinter
-from tkinter import messagebox  # Pour le pop up de victoire
+import tkinter as tk
+from tkinter import messagebox
 
 
 class Morpion:
+
     def __init__(self):
-        self.grp_btns = []
+        self.fen = tk.Tk()
+        self.ensemble_btn = []
         self.joueur_courant = 'X'
         self.victoire = False
-        self.fen = tkinter.Tk()
         self.fen.minsize(500, 500)
         self.dessiner_grille()
 
-    def print_winner(self):
-        """Affiche le message de fin donnant le nom du grand gagnant"""
-        if not self.victoire:
-            self.victoire = True
+    def fin_partie(self, etat=None) -> None:
+        """Fonction affichant un message de victoire ou de match nul"""
+        if etat is None:
             messagebox.showinfo("Fin de partie", f"Le joueur {self.joueur_courant} a gagné le jeu")
-            self.fen.quit()
+        elif etat is None:
+            messagebox.showinfo("Fin de partie", "Match nul !")
+        self.fen.quit()
         return None
 
     def changer_joueur(self) -> None:
-        """Change le joueur courant"""
-        if self.joueur_courant == 'X':
-            self.joueur_courant = 'O'
-        else:
-            self.joueur_courant = 'X'
+        """Change le joueur à chaque tour"""
+        self.joueur_courant = 'O' if self.joueur_courant == 'X' else 'X'
         return None
 
-    def check_win(self, clicked_row: int, clicked_col: int) -> None:
-        """Vérifie si le plateau comporte des positions de victoire / de match nul"""
-        # Detecter victoire horizontale
-        if all(button['text'] == self.joueur_courant for button in self.grp_btns[clicked_col]):
-            self.print_winner()
+    def verif_victoire(self, ligne_clic: int, colonne_clic: int) -> None:
+        """Vérifie si le plateau est en position de victoire ou de match nul"""
+        compteur = 0
+        for i in range(3):
+            btn = self.ensemble_btn[i][ligne_clic]
+            if btn['text'] == self.joueur_courant:
+                compteur += 1
+        if compteur == 3:
+            self.fin_partie()
 
-        # Detecter victoire verticale
-        if all(self.grp_btns[clicked_col][i]['text'] == self.joueur_courant for i in range(3)):
-            self.print_winner()
+        compteur = 0
+        for i in range(3):
+            btn = self.ensemble_btn[colonne_clic][i]
+            if btn['text'] == self.joueur_courant:
+                compteur += 1
+        if compteur == 3:
+            self.fin_partie()
 
-        # Detecter victoire diagonale
-        if clicked_row == clicked_col == 1 or clicked_row != clicked_col:
-            if all(self.grp_btns[i][i]['text'] == self.joueur_courant for i in range(3)):
-                self.print_winner()
+        compteur = 0
+        for i in range(3):
+            btn = self.ensemble_btn[i][i]
+            if btn['text'] == self.joueur_courant:
+                compteur += 1
+        if compteur == 3:
+            self.fin_partie()
 
-        # Detecter victoire diagonale inverse
-        if clicked_row == 1 and clicked_col == 1 or abs(clicked_row - clicked_col) == 2:
-            if all(self.grp_btns[2 - i][i]['text'] == self.joueur_courant for i in range(3)):
-                self.print_winner()
+        compteur = 0
+        for i in range(3):
+            btn = self.ensemble_btn[2 - i][i]
+            if btn['text'] == self.joueur_courant:
+                compteur += 1
+        if compteur == 3:
+            self.fin_partie()
 
-        # Verifier match nul
-        if not self.victoire and all(button['text'] in ('X', 'O') for row in self.grp_btns for button in row):
-            print("Match nul")
-        
+        if not self.victoire:
+            compteur = 0
+            for col in range(3):
+                for ligne in range(3):
+                    btn = self.ensemble_btn[col][ligne]
+                    if btn['text'] == 'X' or btn['text'] == 'O':
+                        compteur += 1
+            if compteur == 9:
+                self.fin_partie("nul")
         return None
 
-    def placer_element(self, ligne: int, colonne: int) -> None:
-        """Place une croix 'X' ou un rond 'O' en fonction du clique et du joueur courant"""
-        btn_clic = self.grp_btns[colonne][ligne]
-        if btn_clic['text'] == "":
+    def placer_symbole(self, ligne: int, colonne: int) -> None:
+        """Place un symbole dans la case cliquée en fonction du joueur courant"""
+        btn_clic = self.ensemble_btn[colonne][ligne]
+        if btn_clic['text'] == '':
             btn_clic.config(text=self.joueur_courant)
-            self.check_win(ligne, colonne)
+            self.verif_victoire(ligne, colonne)
             self.changer_joueur()
         return None
 
     def dessiner_grille(self) -> None:
-        """Dessine la grille du plateau étant composée de 3x3 boutons"""
-        for colonne in range(3):
-            buttons_in_cols = []
-            for row in range(3):
-                button = tkinter.Button(
-                    self.fen, font=("Arial", 50),
+        """Crée le plateau de jeu et stocke les btns crées dans une matrice"""
+        for col in range(3):
+            btn_dans_col = []
+            for ligne in range(3):
+                btn = tk.Button(
+                    self.fen,
+                    font=('Arial', 50),
                     width=5, height=3,
-                    command=lambda r=row, c=colonne: self.placer_element(r, c)
+                    command=lambda li=ligne, c=col: self.placer_symbole(li, c)
                 )
-                button.grid(row=row, column=colonne)
-                buttons_in_cols.append(button)
-            self.grp_btns.append(buttons_in_cols)
+                btn.grid(row=ligne, column=col)
+                btn_dans_col.append(btn)
+            self.ensemble_btn.append(btn_dans_col)
         return None
 
     def run(self) -> None:
@@ -89,6 +102,6 @@ class Morpion:
         return None
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     game = Morpion()
     game.run()
